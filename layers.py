@@ -26,7 +26,7 @@ class Input(Layer):
         if not isinstance(x, list):
             return [x]
         for xi in x:
-            if not isinstance(xi, np.ndarray):
+            if not isinstance(xi, (np.ndarray, np.float32)):
                 raise Exception("input must be np.array or a list of np.array")
         return x
 
@@ -131,7 +131,10 @@ class Loss(Layer):
 
     def forward(self, x):
         self.length = len(x)
-        return x
+        output = 0
+        for xi in x:
+            output += np.sum(xi)
+        return output
 
     def backward(self, g):
         output = []
@@ -170,24 +173,31 @@ class Diff(Layer):
 
 
 if __name__ == '__main__':
-    x = np.random.rand(1000,1)
-    temp = -.1*x + .5
+    batch_size = 10
+    x = np.random.rand(500,1)
+    weight = np.array([[.1]])
+    bias = .2
+    temp = -np.dot(x, weight) - bias
     y = 1.0 / (1.0 + np.exp(-temp))
+
+    x = np.reshape(x, (-1, batch_size)).astype(np.float32)
+    y = np.reshape(y, (-1, batch_size)).astype(np.float32)
 
     layers = []
     layers.append(Input())
-    layers.append(Dense(1, 1))
+    layers.append(Dense(*weight.shape))
     layers.append(Sigmoid())
     layers.append(Diff())
     layers.append(Square())
     layers.append(Loss())
 
     for xi,yi in zip(x, y):
+        xi = list(xi)
         for layer in layers:
             if not isinstance(layer, Diff):
                 xi = layer.forward(xi)
             else:
-                xi = layer.forward(xi, yi)
+                xi = layer.forward(xi, list(yi))
         print (layers[1].weight, layers[1].bias)
 
         for layer in reversed(layers):
