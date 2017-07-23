@@ -194,11 +194,13 @@ class Diff(Layer):
 
 if __name__ == '__main__':
     np.random.seed(1)
-    batch_size = 2
-    feature_size = 3
+    batch_size = 10
+    feature_size = 1
     x = np.random.rand(3000,feature_size)
-    weight = np.array([[.1, .2], [.3, .4], [.5, .6]])
-    bias = np.array([[-.1, -.2]])
+    #weight = np.array([[.1, .2], [.3, .4], [.5, .6]])
+    #bias = np.array([[-.1, -.2]])
+    weight = np.array([[.1]])
+    bias = np.array([[.2]])
     temp = np.dot(x, weight) + bias
     y = 1.0 / (1.0 + np.exp(-temp))
 
