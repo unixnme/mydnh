@@ -4,7 +4,7 @@ import numpy as np
 class Layer(object):
     # takes an input and converts to an output
     def __init__(self):
-        self.learning_rate = .1
+        self.learning_rate = .01
 
     def forward(self, x):
         pass
@@ -91,10 +91,8 @@ class Dense(Layer):
             output.append(temp)
             grad.append(self.weight)
             grad_w.append(xi)
-            db.append(temp)
         self.grad = grad
         self.grad_w = grad_w
-        self.db = db
         return output
 
     def backward(self, g):
@@ -103,10 +101,10 @@ class Dense(Layer):
         output = []
         for idx in range(len(g)):
             dw += np.dot(self.grad_w[idx].T, g[idx])
-            db = self.db[idx]
+            db += g[idx]
             output.append(np.dot(g[idx], self.grad[idx].T))
-        self.weight -= self.learning_rate * dw
-        self.bias -= self.learning_rate * db
+        self.weight -= self.learning_rate * dw * len(g)
+        self.bias -= self.learning_rate * db * len(g)
         return output
 
 class Square(Layer):
@@ -193,14 +191,14 @@ class Diff(Layer):
 
 
 if __name__ == '__main__':
-    np.random.seed(1)
+    #np.random.seed(1)
     batch_size = 10
-    feature_size = 1
-    x = np.random.rand(3000,feature_size)
-    #weight = np.array([[.1, .2], [.3, .4], [.5, .6]])
-    #bias = np.array([[-.1, -.2]])
-    weight = np.array([[.1]])
-    bias = np.array([[.2]])
+    feature_size = 3
+    x = np.random.rand(30000,feature_size)
+    weight = np.array([[.1, .2], [.3, .4], [.5, .6]])
+    bias = np.array([[-.1, -.2]])
+    #weight = np.array([[.1]])
+    #bias = np.array([[.2]])
     temp = np.dot(x, weight) + bias
     y = 1.0 / (1.0 + np.exp(-temp))
 
