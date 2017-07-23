@@ -4,7 +4,7 @@ import numpy as np
 class Layer(object):
     # takes an input and converts to an output
     def __init__(self):
-        self.learning_rate = 1
+        self.learning_rate = .1
 
     def forward(self, x):
         pass
@@ -12,7 +12,7 @@ class Layer(object):
     def backward(self, g):
         output = []
         for idx in range(len(g)):
-            output.append(np.dot(g[idx], self.grad[idx]))
+            output.append(g[idx] * self.grad[idx])
         return output
 
 
@@ -23,6 +23,7 @@ class Input(Layer):
 
     def forward(self, x):
         # if not a list, create a list
+        # len(x) must be a batch size
         if not isinstance(x, list):
             return [x]
         for xi in x:
@@ -74,37 +75,39 @@ class Dense(Layer):
         self.input_size = input_size
         self.output_size = output_size
         self.weight = np.random.randn(input_size, output_size).astype(np.float32)
-        self.bias = np.zeros(output_size).astype(np.float32)
+        self.bias = np.zeros((1, output_size)).astype(np.float32)
         super(Dense, self).__init__()
 
     def forward(self, x):
         output = []
         grad = []
         grad_w = []
-        grad_b = []
+        db = []
         for xi in x:
             xi = xi.reshape(1,-1)
             if len(xi[0]) != self.input_size:
                 raise Exception("input shape does not match")
-            output.append(np.dot(xi, self.weight) + self.bias)
+            temp = np.dot(xi, self.weight) + self.bias
+            output.append(temp)
             grad.append(self.weight)
             grad_w.append(xi)
-            grad_b.append(np.ones(1, dtype=np.float32))
+            db.append(temp)
         self.grad = grad
         self.grad_w = grad_w
-        self.grad_b = grad_b
+        self.db = db
         return output
 
     def backward(self, g):
         dw = np.zeros(self.weight.shape)
         db = np.zeros(self.bias.shape)
+        output = []
         for idx in range(len(g)):
-            dw += np.dot(g[idx], self.grad_w[idx])
-            db += np.dot(g[idx], self.grad_b[idx])
+            dw += np.dot(self.grad_w[idx].T, g[idx])
+            db = self.db[idx]
+            output.append(np.dot(g[idx], self.grad[idx].T))
         self.weight -= self.learning_rate * dw
         self.bias -= self.learning_rate * db
-        return super(Dense, self).backward(g)
-
+        return output
 
 class Square(Layer):
     # return squared function
@@ -123,23 +126,40 @@ class Square(Layer):
     def backward(self, g):
         return super(Square, self).backward(g)
 
-
-class Loss(Layer):
-    # return 1 for backward
+class Sum(Layer):
+    # sum over x1 to xn
     def __init__(self):
-        super(Loss, self).__init__()
+        super(Sum, self).__init__()
 
     def forward(self, x):
-        self.length = len(x)
+        output = []
+        grad = []
+        for xi in x:
+            output.append(np.sum(xi))
+            grad.append(np.ones(xi.shape, dtype=np.float32))
+        self.grad = grad
+        return output
+
+    def backward(self, g):
+        return super(Sum, self).backward(g)
+
+
+class BatchSum(Layer):
+    # return 1 for backward
+    def __init__(self):
+        super(BatchSum, self).__init__()
+
+    def forward(self, x):
+        self.batch_size = len(x)
         output = 0
         for xi in x:
-            output += np.sum(xi)
+            output += xi
         return output
 
     def backward(self, g):
         output = []
-        for _ in range(self.length):
-            output.append(np.array(1, dtype=np.float32))
+        for _ in range(self.batch_size):
+            output.append(1.0)
         return output
 
 class Diff(Layer):
@@ -173,15 +193,14 @@ class Diff(Layer):
 
 
 if __name__ == '__main__':
-    batch_size = 10
-    x = np.random.rand(500,1)
-    weight = np.array([[.1]])
-    bias = .2
-    temp = -np.dot(x, weight) - bias
+    np.random.seed(1)
+    batch_size = 2
+    feature_size = 3
+    x = np.random.rand(3000,feature_size)
+    weight = np.array([[.1, .2], [.3, .4], [.5, .6]])
+    bias = np.array([[-.1, -.2]])
+    temp = np.dot(x, weight) + bias
     y = 1.0 / (1.0 + np.exp(-temp))
-
-    x = np.reshape(x, (-1, batch_size)).astype(np.float32)
-    y = np.reshape(y, (-1, batch_size)).astype(np.float32)
 
     layers = []
     layers.append(Input())
@@ -189,10 +208,12 @@ if __name__ == '__main__':
     layers.append(Sigmoid())
     layers.append(Diff())
     layers.append(Square())
-    layers.append(Loss())
+    layers.append(Sum())
+    layers.append(BatchSum())
 
-    for xi,yi in zip(x, y):
-        xi = list(xi)
+    for idx in range(0, len(x), batch_size):
+        xi = list(x[idx:idx+batch_size])
+        yi = list(y[idx:idx+batch_size])
         for layer in layers:
             if not isinstance(layer, Diff):
                 xi = layer.forward(xi)
@@ -203,15 +224,3 @@ if __name__ == '__main__':
         for layer in reversed(layers):
             xi = layer.backward(xi)
 
-    # layer1 = Identity()
-    # layer2 = Dense(5, 3)
-    # layer3 = Sigmoid()
-    #
-    #
-    # for _ in range(10):
-    #     x = randint(0, 255, (5)).astype(np.float32)
-    #     x = x / 255.0 - 0.5
-    #     x = layer1.forward(x)
-    #     x = layer2.forward(x)
-    #     x = layer3.forward(x)
-    #     print x
