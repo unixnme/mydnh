@@ -155,10 +155,7 @@ class BatchSum(Layer):
         return output
 
     def backward(self, g):
-        output = []
-        for _ in range(self.batch_size):
-            output.append(1.0)
-        return output
+        return list(np.ones((self.batch_size)))
 
 class Diff(Layer):
     # subtract from y
@@ -172,7 +169,6 @@ class Diff(Layer):
         for idx in range(len(y)):
             if not isinstance(y[idx], np.ndarray):
                 y[idx] = np.array(y[idx])
-
 
         output = []
         grad = []
