@@ -115,39 +115,24 @@ class Dense(Layer):
         return output
 
 class Square(Layer):
-    # return squared function
-    def __init__(self):
-        super(Square, self).__init__()
+    @classmethod
+    def eval(cls, xi):
+        return xi**2
 
-    def forward(self, x):
-        output = []
-        grad = []
-        for xi in x:
-            output.append(xi**2)
-            grad.append(2*xi)
-        self.grad = grad
-        return output
-
-    def backward(self, g):
-        return super(Square, self).backward(g)
+    @classmethod
+    def derivative(cls, xi, yi):
+        return 2*xi
 
 class Sum(Layer):
-    # sum over x1 to xn
-    def __init__(self):
+    def __init__(self, axis=-1):
+        self.axis = axis
         super(Sum, self).__init__()
 
-    def forward(self, x):
-        output = []
-        grad = []
-        for xi in x:
-            output.append(np.sum(xi))
-            grad.append(np.ones(xi.shape, dtype=np.float32))
-        self.grad = grad
-        return output
+    def eval(self, xi):
+        return np.sum(xi, axis=self.axis)
 
-    def backward(self, g):
-        return super(Sum, self).backward(g)
-
+    def derivative(self, xi, yi):
+        return np.ones(yi.shape, dtype=np.float32)
 
 class BatchSum(Layer):
     # return 1 for backward
