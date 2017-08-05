@@ -6,8 +6,16 @@ class Layer(object):
     def __init__(self):
         self.learning_rate = .01
 
+    # generic forward method where shape does not change
     def forward(self, x):
-        pass
+        self.grad = []
+        y = []
+        for xi in x:
+            yi = self.eval(xi)
+            dyi = self.derivative(xi, yi)
+            y.append(yi)
+            self.grad.append(dyi)
+        return y
 
     def backward(self, g):
         output = []
