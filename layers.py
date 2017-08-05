@@ -56,6 +56,15 @@ class Sigmoid(Layer):
     def derivative(cls, xi, yi):
         return yi * (1 - yi)
 
+class Elu(Layer):
+    @classmethod
+    def eval(cls, xi):
+        return (xi > 0) * xi + (xi <= 0) * (np.exp(xi) - 1)
+
+    @classmethod
+    def derivative(cls, xi, yi):
+        return (xi > 0) * 1 + (xi <= 0) * (yi + 1)
+
 class Dense(Layer):
     # return product of matrix multiplication
     def __init__(self, input_size, output_size):
@@ -183,12 +192,12 @@ if __name__ == '__main__':
     #weight = np.array([[.1]])
     #bias = np.array([[.2]])
     temp = np.dot(x, weight) + bias
-    y = 1.0 / (1.0 + np.exp(-temp))
+    y = Elu.eval(temp)
 
     layers = []
     layers.append(Input())
     layers.append(Dense(*weight.shape))
-    layers.append(Sigmoid())
+    layers.append(Elu())
     layers.append(Diff())
     layers.append(Square())
     layers.append(Sum())
