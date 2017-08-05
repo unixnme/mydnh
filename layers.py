@@ -65,6 +65,15 @@ class Elu(Layer):
     def derivative(cls, xi, yi):
         return (xi > 0) * 1 + (xi <= 0) * (yi + 1)
 
+class Relu(Layer):
+    @classmethod
+    def eval(cls, xi):
+        return (xi > 0) * xi
+
+    @classmethod
+    def derivative(cls, xi, yi):
+        return (xi > 0) * 1
+
 class Dense(Layer):
     # return product of matrix multiplication
     def __init__(self, input_size, output_size):
@@ -192,12 +201,12 @@ if __name__ == '__main__':
     #weight = np.array([[.1]])
     #bias = np.array([[.2]])
     temp = np.dot(x, weight) + bias
-    y = Elu.eval(temp)
+    y = Relu.eval(temp)
 
     layers = []
     layers.append(Input())
     layers.append(Dense(*weight.shape))
-    layers.append(Elu())
+    layers.append(Relu())
     layers.append(Diff())
     layers.append(Square())
     layers.append(Sum())
