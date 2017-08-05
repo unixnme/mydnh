@@ -83,22 +83,24 @@ class Dense(Layer):
         self.bias = np.zeros((1, output_size)).astype(np.float32)
         super(Dense, self).__init__()
 
+    def eval(self, xi):
+        xi = xi.reshape(1, -1)
+        return np.dot(xi, self.weight) + self.bias
+
+    def derivative(self, xi, yi):
+        return self.weight
+
     def forward(self, x):
-        output = []
-        grad = []
-        grad_w = []
-        db = []
+        y = []
+        self.grad = []
+        self.grad_w = []
         for xi in x:
             xi = xi.reshape(1,-1)
-            if len(xi[0]) != self.input_size:
-                raise Exception("input shape does not match")
-            temp = np.dot(xi, self.weight) + self.bias
-            output.append(temp)
-            grad.append(self.weight)
-            grad_w.append(xi)
-        self.grad = grad
-        self.grad_w = grad_w
-        return output
+            yi = self.eval(xi)
+            y.append(yi)
+            self.grad.append(self.derivative(xi, yi))
+            self.grad_w.append(xi)
+        return y
 
     def backward(self, g):
         dw = np.zeros(self.weight.shape)
@@ -201,12 +203,12 @@ if __name__ == '__main__':
     #weight = np.array([[.1]])
     #bias = np.array([[.2]])
     temp = np.dot(x, weight) + bias
-    y = Relu.eval(temp)
+    y = Sigmoid.eval(temp)
 
     layers = []
     layers.append(Input())
     layers.append(Dense(*weight.shape))
-    layers.append(Relu())
+    layers.append(Sigmoid())
     layers.append(Diff())
     layers.append(Square())
     layers.append(Sum())
