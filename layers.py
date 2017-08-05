@@ -135,10 +135,6 @@ class Sum(Layer):
         return np.ones(yi.shape, dtype=np.float32)
 
 class BatchSum(Layer):
-    # return 1 for backward
-    def __init__(self):
-        super(BatchSum, self).__init__()
-
     def forward(self, x):
         self.batch_size = len(x)
         output = 0
@@ -150,10 +146,6 @@ class BatchSum(Layer):
         return list(np.ones((self.batch_size)))
 
 class Diff(Layer):
-    # subtract from y
-    def __init__(self):
-        super(Diff, self).__init__()
-
     def forward(self, x, y):
         # if not a list, create a list
         if not isinstance(y, list):
@@ -173,10 +165,6 @@ class Diff(Layer):
 
         self.grad = grad
         return output
-
-    def backward(self, g):
-        return super(Diff, self).backward(g)
-
 
 if __name__ == '__main__':
     #np.random.seed(1)
