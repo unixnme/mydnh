@@ -56,20 +56,6 @@ class Sigmoid(Layer):
     def derivative(cls, xi, yi):
         return yi * (1 - yi)
 
-    def forward(self, x):
-        output = []
-        grad = []
-        for xi in x:
-            temp = self.eval(xi)
-            output.append(temp)
-            grad.append(temp * (1 - temp))
-        self.grad = grad
-        return output
-
-    def backward(self, g):
-        return super(Sigmoid, self).backward(g)
-
-
 class Dense(Layer):
     # return product of matrix multiplication
     def __init__(self, input_size, output_size):
