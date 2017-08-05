@@ -25,10 +25,6 @@ class Layer(object):
 
 
 class Input(Layer):
-    # takes an input and converts to an output
-    def __init__(self):
-        super(Input, self).__init__()
-
     def forward(self, x):
         # if not a list, create a list
         # len(x) must be a batch size
@@ -44,10 +40,6 @@ class Input(Layer):
 
 
 class Identity(Layer):
-    # return the same array
-    def __init__(self):
-        super(Identity, self).__init__()
-
     def forward(self, x):
         return x
 
@@ -56,12 +48,13 @@ class Identity(Layer):
 
 
 class Sigmoid(Layer):
-    # return sigmoid function
-    def __init__(self):
-        super(Sigmoid, self).__init__()
+    @classmethod
+    def eval(cls, xi):
+        return 1.0 / (1.0 + np.exp(-xi))
 
-    def eval(self, x):
-        return 1.0 / (1.0 + np.exp(-x))
+    @classmethod
+    def derivative(cls, xi, yi):
+        return yi * (1 - yi)
 
     def forward(self, x):
         output = []
